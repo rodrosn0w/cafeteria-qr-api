@@ -1,26 +1,44 @@
-# ☕ SmartMenu QR - Punto Café (API Backend)
+#  SmartMenu QR - Punto Café (API Backend)
 
 > **Estatus del Proyecto:** En Desarrollo (MVP Funcional)  
 > **Área:** Ingeniería de Software / Backend Development
 
-## 🎯 Contexto y Problema
-Este proyecto nace de una necesidad real: digitalizar la gestión de pedidos de un emprendimiento de pastelería artesanal. El problema principal era la demora en la atención en mesa y la dificultad para actualizar precios y stock en menús físicos de papel. 
+##  Contexto y Problema
+Este proyecto nace de una necesidad real: digitalizar la gestión de pedidos de una cafetería. El problema principal era el flujo de pedido: el cliente debe ir hasta mostrador para hacer el pedido, muchas personas no tenían conocimiento de esto por lo que, sentado en su mesa esperando al mozo, pasaba el tiempo y nadie lo atendía. Esto hacía que el cliente se retirara del local, perdiendo ventas y recibiendo reseñas negativas en Google.
 
-**La Solución:** Una API REST robusta que centraliza la carta, permite el autoservicio mediante códigos QR y garantiza que el cliente solo vea productos con stock disponible en tiempo real.
+**La Solución:** Una API REST robusta que centraliza la carta, permite el autoservicio mediante códigos QR y garantiza que el cliente haga el pedido desde la comodidad de su mesa.
 
-## 🛠️ Stack Tecnológico y Decisiones de Arquitectura
-Para este desarrollo, elegí un stack moderno enfocado en la velocidad de respuesta y la integridad de los datos:
+## 🚀 Flujo completo de un pedido
 
-* **FastAPI (Python):** Seleccionado por su alto rendimiento (basado en Starlette/Pydantic) y la capacidad de autogenerar documentación interactiva (Swagger), lo que acelera el testeo.
-* **MySQL & SQLAlchemy (ORM):** Implementé un modelo relacional para asegurar la consistencia entre mesas, productos y pedidos. El uso de un ORM me permitió mantener el código limpio y facilitar futuras migraciones.
-* **Uvicorn:** Servidor ASGI para manejar peticiones asíncronas de forma eficiente.
-* **Python-dotenv:** Gestión estandarizada de variables de entorno para seguridad de credenciales.
+1. Dueño crea mesa con `POST /mesas/` → obtiene QR con `GET /mesas/{id}/qr`
+2. QR impreso se pega en la mesa física
+3. Cliente escanea → su celular abre el frontend con `?token=abc123`
+4. Frontend llama `GET /menu/?token=abc123` → muestra el menú
+5. Cliente elige productos → `POST /pedidos/?token=abc123`
+6. El panel del mostrador recibe notificación WS instantánea
+7. Mostrador cambia estado: `PATCH /pedidos/{id}/estado` → `en_preparacion`
+8. Cuando está listo: `→ listo`, llevan a la mesa, `→ entregado`
+9. Si pagó con efectivo al terminar: `PATCH /pedidos/{id}/pagar`
 
-## 🧠 Desafíos Técnicos y Aprendizajes
-Durante el desarrollo, me enfrenté a retos que pusieron a prueba mi capacidad de resolución:
+## 🛠️ Stack Tecnológico
 
-1.  **Sincronización de Entornos:** El desafío más reciente fue estandarizar el esquema de la base de datos entre diferentes máquinas de desarrollo (PC y Notebook). Lo resolví mediante la unificación de modelos en SQLAlchemy y la configuración de una política de ejecución de scripts en PowerShell para entornos virtuales.
-2.  **Mapeo Objeto-Relacional:** Ajusté la convención de nombres (Singular vs Plural) para alinear el código Python con las tablas existentes en MySQL, garantizando la paridad del sistema.
+Para garantizar un sistema de alta disponibilidad y bajo tiempo de respuesta, utilicé las siguientes herramientas:
+
+* **FastAPI (Python 3.12+):** Elegido por su rendimiento asíncrono y la validación de datos automática mediante **Pydantic**.
+* **MySQL & SQLAlchemy (ORM):** Implementación de una base de datos relacional para asegurar la integridad referencial entre pedidos y productos.
+* **Uvicorn:** Servidor ASGI de alto rendimiento para el despliegue de la API.
+* **Python-dotenv:** Gestión de seguridad para desacoplar las credenciales de la base de datos del código fuente mediante archivos `.env`.
+*  **Pydantic:** Motor de validación de datos que garantiza la integridad de la información entrante y saliente, definiendo contratos claros entre el frontend y el backend.
+
+## 🏛️ Decisiones de Arquitectura
+
+el proyecto se estructuró bajo los siguientes pilares:
+
+* **Arquitectura en Capas:** Separación estricta de responsabilidades entre el modelo de datos (`models.py`), los esquemas de validación (`schemas.py`) y la lógica de negocio en los endpoints (`main.py`).
+* **Normalización de Datos:** Diseño de una base de datos relacional que vincula Mesas, Productos y Pedidos mediante tablas intermedias (`order_items`), evitando la redundancia y permitiendo reportes detallados.
+* **Validación de Contratos:** Implementación de esquemas de Pydantic para asegurar que la API solo procese datos que cumplan con los tipos y formatos requeridos, reduciendo errores en tiempo de ejecución.
+
+
 
 ## 📋 Documentación de la API (Endpoints)
 La API cuenta con documentación automática en `/docs`. Algunos endpoints clave son:
@@ -28,11 +46,11 @@ La API cuenta con documentación automática en `/docs`. Algunos endpoints clave
 * `POST /orders` (En desarrollo): Procesará pedidos vinculando productos con IDs de mesa.
 
 ## 🚀 Instalación y Uso
-1. Clonar el repositorio.
-2. Crear entorno virtual: `python -m venv venv`.
-3. Activar y ejecutar: `.\venv\Scripts\activate` y `pip install -r requirements.txt`.
-4. Configurar `.env` con la URL de tu MySQL local.
-5. Iniciar: `uvicorn main:app --reload`.
+1. **Clonación:** `git clone https://github.com/rodrosn0w/cafeteria-qr-api.git`
+2. **Entorno:** `python -m venv venv` y activación con `.\venv\Scripts\activate`.
+3. **Dependencias:** `pip install -r requirements.txt`.
+4. **Base de Datos:** Configurar el archivo `.env` con las credenciales de MySQL local.
+5. **Ejecución:** `uvicorn main:app --reload`.
 
 ---
-**Desarrollado por Rodrigo** *Estudiante de Ingeniería en Informática (UADE) | Enfocado en Backend & Data Analytics*
+**Desarrollado por Rodrigo** * Backend  Developer*
